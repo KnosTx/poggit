@@ -591,6 +591,7 @@ MESSAGE
     }
 
     protected function lintPhpFile(BuildResult $result, string $file, string $contents, bool $isFileMain, string $srcNamespacePrefix = "", $options = []) {
+        if($options === null) return;
         file_put_contents($this->tempFile, $contents);
         Lang::myShellExec("php -l " . escapeshellarg($this->tempFile), $lint, $stderr, $exitCode);
         $lint = trim(str_replace($this->tempFile, $file, $lint));
@@ -603,8 +604,6 @@ MESSAGE
                 return;
             }
         }
-
-        if($options === null) return;
 
         $lines = explode("\n", $contents);
         $tokens = token_get_all($contents);
