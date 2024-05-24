@@ -167,6 +167,10 @@ $(function() {
     });
 
     function doPluginSearch() {
+        if($("#pluginSearch").val().length === 0){
+            alert("No search query found, please enter a search query.")
+            return;
+        }
         if($("#pluginSearch").val().indexOf(" ") !== -1){
             alert("Please do not use spaces in your search query.");
             return;
