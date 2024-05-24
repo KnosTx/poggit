@@ -96,6 +96,17 @@ $(function() {
     }
 
     function tabularize(tags, $contents, requiredHeaders, isHorizontal, containerId) {
+        // Remove GitHub markdown headers (added around early 2024 and breaks this parser)
+        $('[class^="markdown-heading"]').replaceWith(function() {
+            for(let i = 0; i < tags.length; ++i) {
+                if($(this).children(tags[i]).length > 0) {
+                    //move the a.anchor into the h tag
+                    $(this).children("a.anchor").appendTo($(this).children(tags[i]).first());
+                }
+            }
+            return $(this).html();
+        });
+
         // choose delimiter
         let delimiter = null, delimiterId;
         for(let i = 0; i < tags.length; ++i) {
