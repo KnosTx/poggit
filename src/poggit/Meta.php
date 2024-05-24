@@ -130,6 +130,12 @@ final class Meta {
     private static $moduleName;
 
     public static function init() {
+        if(isset($_SERVER["HTTP_CF_RAY"])) {
+            self::$requestId = substr(md5($_SERVER["HTTP_CF_RAY"]), 0, 4) . "-" . $_SERVER["HTTP_CF_RAY"];
+        } else {
+            self::$requestId = bin2hex(random_bytes(8));
+        }
+
         self::$ACCESS = self::getSecret("meta.access");
 
         if(file_exists(INSTALL_PATH . ".git/HEAD")) { //Found Git information!
@@ -146,12 +152,6 @@ final class Meta {
         }
         if(!isset(self::$GIT_COMMIT)) { //Unknown :(
             self::$GIT_COMMIT = str_repeat("00", 20);
-        }
-
-        if(isset($_SERVER["HTTP_CF_RAY"])) {
-            self::$requestId = substr(md5($_SERVER["HTTP_CF_RAY"]), 0, 4) . "-" . $_SERVER["HTTP_CF_RAY"];
-        } else {
-            self::$requestId = bin2hex(random_bytes(8));
         }
 
         Lang::checkDeps();
