@@ -69,6 +69,7 @@ class InternalErrorPage extends Module {
         <ul>
           <li>Via <a href="https://github.com/poggit/poggit/issues/new">GitHub - Report Issues</a></li>
           <li>Via <a href="https://discord.gg/DYSEf2WGPQ">Discord - Chat Server</a></li>
+          <li>Via <a href="mailto:team@pmmp.io?subject=Poggit%20500%20ISE%20-%20<?= htmlspecialchars($_REQUEST["id"] ?? Meta::getRequestId(), ENT_QUOTES, 'UTF-8') ?>">Email</a></li>
       </div>
       </body>
       </html>
