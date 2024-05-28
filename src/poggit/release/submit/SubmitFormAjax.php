@@ -31,6 +31,8 @@ use poggit\release\PluginRequirement;
 use poggit\release\Release;
 use poggit\release\SubmitException;
 use poggit\resource\ResourceManager;
+use poggit\utils\internet\Curl;
+use poggit\utils\internet\CurlErrorException;
 use poggit\utils\internet\GitHub;
 use poggit\utils\internet\GitHubAPIException;
 use poggit\utils\internet\Mysql;
@@ -342,7 +344,7 @@ class SubmitFormAjax extends AjaxModule {
         $this->moduleName = array_shift($path);
         if(count($path) === 0) $this->exitRedirect("https://youtu.be/SKaOPMT-aM8", true, "You are being redirected to the demo video.");
         if(count($path) < 4) $this->exitRedirect("ci/" . implode("/", $path));
-        list($this->buildRepoOwner, $this->buildRepoName, $this->buildProjectName, $this->buildNumber) = $path;
+        [$this->buildRepoOwner, $this->buildRepoName, $this->buildProjectName, $this->buildNumber] = $path;
         if($this->buildProjectName === "~") $this->buildProjectName = $this->buildRepoName;
         if(Lang::startsWith(strtolower($this->buildNumber), "dev:")) $this->buildNumber = substr($this->buildNumber, 4);
         if(!is_numeric($this->buildNumber)) $this->exitRedirect("ci/$this->buildRepoOwner/$this->buildRepoName/$this->buildProjectName");
@@ -712,7 +714,7 @@ EOD
     public static function rangesToApis(array $input): array {
         $versions = array_keys(PocketMineApi::$VERSIONS); // id => name
         $flatInput = []; // name => id
-        foreach($input as list($start, $end)) {
+        foreach($input as [$start, $end]) {
             $startNumber = array_search($start, $versions, true);
             $endNumber = array_search($end, $versions, true);
             if($startNumber === false) throw new SubmitException("Unknown API version $start");
@@ -871,6 +873,14 @@ EOD
 
     private function loadIcon() {
         $iconPath = ($this->poggitYmlProject["icon"] ?? "icon.png") ?: "icon.png";
+        if(Lang::startsWith($iconPath, "https://")) {
+            return $this->loadRemoteIcon($iconPath);
+        } else {
+            return $this->loadLocalIcon($iconPath);
+        }
+    }
+
+    private function loadLocalIcon(string $iconPath): array {
         $iconPath = $iconPath[0] === "/" ? substr($iconPath, 1) : $this->buildInfo->path . $iconPath;
 
         $ADD_ICON_INSTRUCTIONS = <<<INSTR
@@ -917,9 +927,88 @@ $ADD_ICON_INSTRUCTIONS
 EOM
         ];
 
-        if(!is_object($response) || $response->type !== "file" || $response->encoding !== "base64") return $this->iconData = $invalidFile;
+        if(!is_object($response) || $response->type !== "file" || $response->encoding !== "base64") return $invalidFile;
 
         $imageString = base64_decode($response->content);
+
+        $data = $this->checkIconImage($imageString, $escapedIconPath);
+        return $data["url"] === null ? $data : ["url" => $response->download_url, "html" => $data["html"]];
+    }
+
+    private function loadRemoteIcon(string $iconPath): array {
+        // Check if the URL is a valid format
+        $matches = [];
+        $escapedIconPath = htmlspecialchars($iconPath);
+        // Only allow https://github.com/USERNAME/REPO/blob/HASHHERE/FILEHERE.extension
+        if(preg_match('/^https:\/\/github\.com\/([^\/]+)\/([^\/]+)\/(?:blob|raw)\/([^\/]+)\/(.+)$/', $iconPath, $matches) !== 1) {
+            // OR https://raw.githubusercontent.com/USERNAME/REPO/HASHHERE/FILEHERE.extension
+            if(preg_match('/^https:\/\/raw\.githubusercontent\.com\/([^\/]+)\/([^\/]+)\/([^\/]+)\/(.+)$/', $iconPath, $matches) !== 1) {
+                return ["url" => null, "html" => <<<EOM
+<p>The icon URL <code>$escapedIconPath</code> does not follow the allowed format, the icon URL must be in the format of 
+<code>https://raw.githubusercontent.com/user/repo/HASH/file</code>. The default icon will be used instead. Please review
+ the instructions for adding an icon; your plugin will not be considered for featuring without a valid custom icon.</p>
+EOM
+                ];
+            }
+        } else {
+            // Convert https://github.com url to https://raw.githubusercontent.com
+            $iconPath = "https://raw.githubusercontent.com/$matches[1]/$matches[2]/$matches[3]/$matches[4]";
+            $escapedIconPath = htmlspecialchars($iconPath);
+        }
+
+        $hash = $matches[3];
+        // Check if the 'hash' is actually a hash and not a tag or branch name.
+        // NOTE: https://docs.github.com/en/get-started/using-git/dealing-with-special-characters-in-branch-and-tag-names#restrictions-on-names-in-github
+        if(preg_match('/^[a-f0-9]{40}$/', $hash) !== 1) {
+            return ["url" => null, "html" => <<<EOM
+<p>The icon URL <code>$escapedIconPath</code> does not contain a valid commit hash, the icon URL must be in the format of
+<code>https://raw.githubusercontent.com/user/repo/HASH/file</code>. The default icon will be used instead. Please review
+ the instructions for adding an icon; your plugin will not be considered for featuring without a valid custom icon.</p>
+EOM
+            ];
+        }
+
+        try {
+            $result = Curl::curlGetMaxSize($iconPath, 256 << 10);
+        } catch(Exception) {
+            return ["url" => null, "html" => <<<EOM
+<p>The icon URL <code>$escapedIconPath</code> could not be accessed (max 256kb). The default icon will be used instead. Please 
+review the instructions for adding an icon; your plugin will not be considered for featuring without a valid custom 
+icon.</p>
+EOM
+            ];
+        }
+
+        if(!is_string($result)) {
+            return ["url" => null, "html" => <<<EOM
+<p>The icon URL <code>$escapedIconPath</code> could not be accessed (max 256kb). The default icon will be used instead. Please
+review the instructions for adding an icon; your plugin will not be considered for featuring without a valid custom
+icon.</p>
+EOM
+            ];
+        }
+
+        return $this->checkIconImage($result, $escapedIconPath);
+    }
+
+    private function checkIconImage(string $imageString, string $escapedIconPath): array {
+        $ADD_ICON_INSTRUCTIONS = <<<INSTR
+<p>To add an icon for your plugin:</p>
+<ol start="0">
+<li>You will have to submit the plugin from another build. To keep the changes in this page, click "Save as Draft" and
+close this page.</li>
+<li>Add the icon file into the project directory (next to plugin.yml). Give it any name you like.</li>
+<li>In .poggit.yml, under this project's node (next to attributes like <code>path</code>), add a property
+<code>icon</code> with the icon file's path relative to the project directory (i.e. the file name) as the value.
+<ul><li>Make sure there are no leading slashes; leading slashes imply that the path is relative to the repo root rather
+than the project directory.</li></ul></li>
+<li>Add, commit and push the changes to GitHub. Make sure the commit triggered a new Poggit-CI build for the project.
+</li>
+<li>Submit this plugin from the new build.</li>
+</ol>
+<p>If you don't want to modify .poggit.yml, you may name the icon file as icon.png and add it in the project directory
+directly. This will prevent triggering builds for other projects in the repo.</p>
+INSTR;
 
         if(strlen($imageString) > (256 << 10)) {
             $size = strlen($imageString) / (1 << 10);
@@ -945,7 +1034,7 @@ EOM
             ];
         }
 
-        list($width, $height, $type) = $imageData = getimagesizefromstring($imageString);
+        [$width, $height, $type] = $imageData = getimagesizefromstring($imageString);
         if($width > 1024 || $height > 1024) {
             return ["url" => null, "html" => <<<EOM
 <p>The icon file at <code>$escapedIconPath</code> is too large ($width&times;$height px), exceeding the limit (1024&times;1024
@@ -966,8 +1055,8 @@ EOM
             ];
         }
         $sizeStr = Lang::formatFileSize(strlen($imageString));
-        return ["url" => $response->download_url, "html" => <<<EOM
-<p>Using image from <code>$iconPath</code><br/>
+        return ["url" => $escapedIconPath, "html" => <<<EOM
+<p>Using image from <code>$escapedIconPath</code><br/>
 Type: <code>$escapedMime</code><br/>
 Dimensions: $width&times;$height px<br/>
 Size: $sizeStr</p>
