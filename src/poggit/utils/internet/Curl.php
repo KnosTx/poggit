@@ -98,7 +98,6 @@ final class Curl {
             /** @noinspection PhpUnusedParameterInspection */
             curl_setopt($ch, CURLOPT_PROGRESSFUNCTION, function(/** @noinspection PhpUnusedParameterInspection */
                 $ch, $dlSize, $dlAlready, $ulSize, $ulAlready) use ($maxBytes) {
-                echo $dlSize, PHP_EOL;
                 return $dlSize > $maxBytes ? 1 : 0;
             });
         }, ...$extraHeaders);
