@@ -585,11 +585,10 @@ MESSAGE
         if($options === null) return;
         $serviceEndpoint = Meta::getSecret("microserviceEndpoints.lint");
 
-        file_put_contents($this->tempFile, $contents);
-        Lang::myShellExec("php -l " . escapeshellarg($this->tempFile), $lint, $stderr, $exitCode);
-        $lint = trim(str_replace($this->tempFile, $file, $lint));
-        if($exitCode !== 0){
-            if($options["syntaxError"] ?? true) {
+        if($options["syntaxError"] ?? true) {
+            $lintResponse = json_decode(Curl::curlPost($serviceEndpoint . "/lint.php", $contents), true);
+            $lint = trim(str_replace("{POGGIT_LINT_FILE}", $file, $lintResponse["lint"]));
+            if($lint !== "OK") {
                 $status = new SyntaxErrorLint();
                 $status->file = $file;
                 $status->output = $lint;
