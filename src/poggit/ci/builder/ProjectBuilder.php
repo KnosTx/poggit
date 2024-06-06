@@ -43,6 +43,7 @@ use poggit\Config;
 use poggit\Meta;
 use poggit\resource\ResourceManager;
 use poggit\timeline\BuildCompleteTimeLineEvent;
+use poggit\utils\internet\Curl;
 use poggit\utils\internet\Discord;
 use poggit\utils\internet\GitHub;
 use poggit\utils\internet\GitHubAPIException;
@@ -74,6 +75,7 @@ use function implode;
 use function is_array;
 use function is_file;
 use function is_int;
+use function json_decode;
 use function json_encode;
 use function preg_match;
 use function preg_match_all;
@@ -87,22 +89,11 @@ use function strpos;
 use function strtolower;
 use function substr;
 use function substr_count;
-use function token_get_all;
 use function trim;
 use function unlink;
 use const DATE_ATOM;
 use const JSON_UNESCAPED_SLASHES;
 use const PREG_SET_ORDER;
-use const T_CLASS;
-use const T_CLOSE_TAG;
-use const T_ECHO;
-use const T_INLINE_HTML;
-use const T_NAMESPACE;
-use const T_NEW;
-use const T_NAME_QUALIFIED;
-use const T_PAAMAYIM_NEKUDOTAYIM;
-use const T_STRING;
-use const T_WHITESPACE;
 
 abstract class ProjectBuilder {
     const PROJECT_TYPE_PLUGIN = 1;
@@ -592,6 +583,8 @@ MESSAGE
 
     protected function lintPhpFile(BuildResult $result, string $file, string $contents, bool $isFileMain, string $srcNamespacePrefix = "", $options = []) {
         if($options === null) return;
+        $serviceEndpoint = Meta::getSecret("microserviceEndpoints.lint");
+
         file_put_contents($this->tempFile, $contents);
         Lang::myShellExec("php -l " . escapeshellarg($this->tempFile), $lint, $stderr, $exitCode);
         $lint = trim(str_replace($this->tempFile, $file, $lint));
@@ -606,7 +599,8 @@ MESSAGE
         }
 
         $lines = explode("\n", $contents);
-        $tokens = token_get_all($contents);
+        $tokenResponse = json_decode(Curl::curlPost($serviceEndpoint . "/tokens.php", $contents), true);
+        $tokens = $tokenResponse["tokens"];
         $currentLine = 1;
         $namespaces = [];
         $classes = [];
@@ -618,16 +612,16 @@ MESSAGE
         $hasReportedUseOfEcho = null;
         foreach($tokens as $t) {
             if(!is_array($t)) {
-                $t = [-1, $t, $currentLine];
+                $t = ["", $t, $currentLine];
             }
-            $lastToken = $token ?? [0, "", 0];
-            list($tokenId, $currentCode, $currentLine) = $token = $t;
+            $lastToken = $token ?? ["", "", 0];
+            [$tokenId, $currentCode, $currentLine] = $token = $t;
             $currentLine += substr_count($currentCode, "\n");
 
-            if($tokenId === T_WHITESPACE) {
+            if($tokenId === "T_WHITESPACE") {
                 continue;
             }
-            if($tokenId === T_STRING) {
+            if($tokenId === "T_STRING") {
                 if(isset($buildingNamespace)) {
                     //Single namespace will be string.
                     $buildingNamespace .= trim($currentCode);
@@ -635,22 +629,22 @@ MESSAGE
                     $classes[] = [$currentNamespace, trim($currentCode), $currentLine];
                     $wantClass = false;
                 }
-            } elseif($tokenId === T_NAME_QUALIFIED) {
+            } elseif($tokenId === "T_NAME_QUALIFIED") {
                 if(isset($buildingNamespace)) {
                     $buildingNamespace = trim($currentCode);
                 }
-            } elseif($tokenId === T_CLASS) {
-                if($lastToken[0] !== T_PAAMAYIM_NEKUDOTAYIM and $lastToken[0] !== T_NEW) {
+            } elseif($tokenId === "T_CLASS") {
+                if($lastToken[0] !== "T_PAAMAYIM_NEKUDOTAYIM" and $lastToken[0] !== "T_NEW") {
                     $wantClass = true;
                 }
-            } elseif($tokenId === T_NAMESPACE) {
+            } elseif($tokenId === "T_NAMESPACE") {
                 $buildingNamespace = "";
             } elseif($tokenId === -1) {
                 if(trim($currentCode) === ";" || trim($currentCode) === "{" and isset($buildingNamespace)) {
                     $namespaces[] = $currentNamespace = $buildingNamespace;
                     unset($buildingNamespace);
                 }
-            } elseif($tokenId === T_CLOSE_TAG){
+            } elseif($tokenId === "T_CLOSE_TAG"){
                 if($options["closeTag"] ?? true) {
                     $status = new CloseTagLint();
                     $status->file = $file;
@@ -659,14 +653,14 @@ MESSAGE
                     $status->hlSects[] = [$closeTagPos = strpos($status->code, "\x3F\x3E"), $closeTagPos + 2];
                     $result->addStatus($status);
                 }
-            } elseif($tokenId === T_INLINE_HTML or $tokenId === T_ECHO) {
-                if($tokenId === T_INLINE_HTML) {
+            } elseif($tokenId === "T_INLINE_HTML" or $tokenId === "T_ECHO") {
+                if($tokenId === "T_INLINE_HTML") {
                     if(isset($hasReportedInlineHtml)) {
                         continue;
                     }
                     $hasReportedInlineHtml = true;
                 }
-                if($tokenId === T_ECHO) {
+                if($tokenId === "T_ECHO") {
                     if(isset($hasReportedUseOfEcho)) {
                         continue;
                     }
@@ -676,7 +670,7 @@ MESSAGE
                     $status = new DirectStdoutLint();
                     $status->file = $file;
                     $status->line = $currentLine;
-                    if($tokenId === T_INLINE_HTML) {
+                    if($tokenId === "T_INLINE_HTML") {
                         $status->code = $currentCode;
                         $status->isHtml = true;
                     } else {
@@ -690,7 +684,7 @@ MESSAGE
             }
         }
         //This will need adjusting when PM4 drops with PSR-4 support.
-        foreach($classes as list($namespace, $class, $line)) {
+        foreach($classes as [$namespace, $class, $line]) {
             $result->knownClasses[] = $namespace . "\\" . $class;
             //TODO Potentially a PSR-4 lint?
             if($file !== "src/" . str_replace("\\", "/", $namespace) . "/" . $class . ".php" and $srcNamespacePrefix === ""){
