@@ -46,7 +46,7 @@ use function var_export;
 
 class PluginBuilder extends ProjectBuilder {
     public function getName(): string {
-        return "default";
+        return "plugin";
     }
 
     public function getVersion(): string {

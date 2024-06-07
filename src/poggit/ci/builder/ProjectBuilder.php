@@ -96,11 +96,9 @@ use const PREG_SET_ORDER;
 abstract class ProjectBuilder {
     const PROJECT_TYPE_PLUGIN = 1;
     const PROJECT_TYPE_LIBRARY = 2;
-    const PROJECT_TYPE_SPOON = 3; //REMOVED
     public static $PROJECT_TYPE_HUMAN = [
         self::PROJECT_TYPE_PLUGIN => "Plugin",
-        self::PROJECT_TYPE_LIBRARY => "Library",
-        self::PROJECT_TYPE_SPOON => "Spoon", //REMOVED
+        self::PROJECT_TYPE_LIBRARY => "Library"
     ];
 
     const BUILD_CLASS_DEV = 1;
@@ -194,22 +192,22 @@ MESSAGE
             $modelName = $project->framework;
             if($project->type === self::PROJECT_TYPE_LIBRARY) {
                 $builderList = self::$LIBRARY_BUILDERS;
-            } elseif($project->type === self::PROJECT_TYPE_SPOON) {
-                throw new WebhookException(<<<MESSAGE
-This project is a Spoon project, which has been removed permanently.
-Please migrate to a new project type.
-MESSAGE
-                    , WebhookException::LOG_INTERNAL | WebhookException::OUTPUT_TO_RESPONSE | WebhookException::NOTIFY_AS_COMMENT, $repoData->full_name, $cause->getCommitSha());
-            } else {
+            } elseif($project->type === self::PROJECT_TYPE_PLUGIN) {
                 if($modelName !== "default") {
                     throw new WebhookException(<<<MESSAGE
-This project is a plugin, but the framework is not recognized.
-Please set the framework to "default" in the .poggit.yml file.
+This project is a plugin, but the framework/model is not recognized.
+Please remove the `model` field in the .poggit.yml file.
 MESSAGE
                     , WebhookException::LOG_INTERNAL | WebhookException::OUTPUT_TO_RESPONSE | WebhookException::NOTIFY_AS_COMMENT, $repoData->full_name, $cause->getCommitSha());
 
                 }
                 $builderList = self::$PLUGIN_BUILDERS;
+            } else {
+                throw new WebhookException(<<<MESSAGE
+This project is neither a plugin nor a library.
+Please set the type to "plugin" or "library" in the .poggit.yml file.
+MESSAGE
+                    , WebhookException::LOG_INTERNAL | WebhookException::OUTPUT_TO_RESPONSE | WebhookException::NOTIFY_AS_COMMENT, $repoData->full_name, $cause->getCommitSha());
             }
             $builderClass = $builderList[strtolower($modelName)];
             /** @var ProjectBuilder $builder */

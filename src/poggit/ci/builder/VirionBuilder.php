@@ -43,7 +43,7 @@ use const poggit\ASSETS_PATH;
 
 class VirionBuilder extends ProjectBuilder {
     public function getName(): string {
-        return "poggit-virion";
+        return "virion";
     }
 
     public function getVersion(): string {

@@ -179,6 +179,7 @@ MESSAGE
     private function findProjectsFromManifest(array $manifest): array {
         $projects = [];
         static $projectTypes = [
+            "plugin" => ProjectBuilder::PROJECT_TYPE_PLUGIN,
             "lib" => ProjectBuilder::PROJECT_TYPE_LIBRARY,
             "library" => ProjectBuilder::PROJECT_TYPE_LIBRARY,
         ];
