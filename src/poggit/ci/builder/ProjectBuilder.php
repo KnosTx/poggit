@@ -63,9 +63,7 @@ use function count;
 use function date;
 use function dechex;
 use function end;
-use function escapeshellarg;
 use function explode;
-use function file_put_contents;
 use function filesize;
 use function fopen;
 use function get_class;
@@ -98,11 +96,11 @@ use const PREG_SET_ORDER;
 abstract class ProjectBuilder {
     const PROJECT_TYPE_PLUGIN = 1;
     const PROJECT_TYPE_LIBRARY = 2;
-    const PROJECT_TYPE_SPOON = 3;
+    const PROJECT_TYPE_SPOON = 3; //REMOVED
     public static $PROJECT_TYPE_HUMAN = [
         self::PROJECT_TYPE_PLUGIN => "Plugin",
         self::PROJECT_TYPE_LIBRARY => "Library",
-        self::PROJECT_TYPE_SPOON => "Spoon",
+        self::PROJECT_TYPE_SPOON => "Spoon", //REMOVED
     ];
 
     const BUILD_CLASS_DEV = 1;
@@ -117,12 +115,8 @@ abstract class ProjectBuilder {
         self::BUILD_CLASS_PR => "pr"
     ];
 
-    public static $PLUGIN_BUILDERS = [
-        "default" => DefaultProjectBuilder::class,
-        "nowhere" => NowHereProjectBuilder::class,
-    ];
-    public static $LIBRARY_BUILDERS = ["virion" => PoggitVirionBuilder::class];
-    public static $SPOON_BUILDERS = ["spoon" => SpoonBuilder::class];
+    public static $PLUGIN_BUILDERS = ["default" => PluginBuilder::class];
+    public static $LIBRARY_BUILDERS = ["virion" => VirionBuilder::class];
     private static $moreBuilds;
 
     private static $discordQueue = [];
@@ -201,8 +195,20 @@ MESSAGE
             if($project->type === self::PROJECT_TYPE_LIBRARY) {
                 $builderList = self::$LIBRARY_BUILDERS;
             } elseif($project->type === self::PROJECT_TYPE_SPOON) {
-                $builderList = self::$SPOON_BUILDERS;
+                throw new WebhookException(<<<MESSAGE
+This project is a Spoon project, which has been removed permanently.
+Please migrate to a new project type.
+MESSAGE
+                    , WebhookException::LOG_INTERNAL | WebhookException::OUTPUT_TO_RESPONSE | WebhookException::NOTIFY_AS_COMMENT, $repoData->full_name, $cause->getCommitSha());
             } else {
+                if($modelName !== "default") {
+                    throw new WebhookException(<<<MESSAGE
+This project is a plugin, but the framework is not recognized.
+Please set the framework to "default" in the .poggit.yml file.
+MESSAGE
+                    , WebhookException::LOG_INTERNAL | WebhookException::OUTPUT_TO_RESPONSE | WebhookException::NOTIFY_AS_COMMENT, $repoData->full_name, $cause->getCommitSha());
+
+                }
                 $builderList = self::$PLUGIN_BUILDERS;
             }
             $builderClass = $builderList[strtolower($modelName)];

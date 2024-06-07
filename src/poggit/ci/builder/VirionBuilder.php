@@ -41,7 +41,7 @@ use function strtolower;
 use function substr;
 use const poggit\ASSETS_PATH;
 
-class PoggitVirionBuilder extends ProjectBuilder {
+class VirionBuilder extends ProjectBuilder {
     public function getName(): string {
         return "poggit-virion";
     }

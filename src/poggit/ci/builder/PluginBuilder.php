@@ -44,7 +44,7 @@ use function substr;
 use function trim;
 use function var_export;
 
-class DefaultProjectBuilder extends ProjectBuilder {
+class PluginBuilder extends ProjectBuilder {
     public function getName(): string {
         return "default";
     }
