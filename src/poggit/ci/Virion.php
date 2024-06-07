@@ -77,7 +77,7 @@ class Virion {
         $this->buildNumber = $buildNumber;
     }
 
-    public static function processLibs(Phar $phar, RepoZipball $zipball, WebhookProjectModel $project, callable $getPrefix) {
+    public static function processLibs(Phar $phar, RepoZipball $zipball, WebhookProjectModel $project, ?array $api, callable $getPrefix) {
         require_once ASSETS_PATH . "php/virion.php";
         $libs = $project->manifest["libs"] ?? null;
         if(!is_array($libs)) return;
@@ -142,7 +142,7 @@ class Virion {
                     $version = $libDeclaration["version"] ?? "*";
                     $branch = $libDeclaration["branch"] ?? ":default";
 
-                    $virionBuildId = self::injectProjectVirion(WebhookHandler::$token, WebhookHandler::$user, $phar, $srcOwner, $srcRepo, $srcProject, $version, $branch, $thisPrefix, $shade);
+                    $virionBuildId = self::injectProjectVirion(WebhookHandler::$token, WebhookHandler::$user, $phar, $srcOwner, $srcRepo, $srcProject, $version, $branch, $thisPrefix, $shade, $api);
 
                     Mysql::query("INSERT INTO virion_usages (virionBuild, userBuild) VALUES (?, ?)", "ii",
                         $virionBuildId, $phar->getMetadata()["poggitBuildId"]);
@@ -155,9 +155,31 @@ class Virion {
         }
     }
 
-    private static function injectProjectVirion(string $token, string $user, Phar $phar, string $owner, string $repo, string $project, string $version, string $branch, string $prefix, int $shade): int {
-        $virion = self::findVirion("$owner/$repo", $project, $version, function($apis) {
-            return true; // TODO implement API filtering
+    private static function injectProjectVirion(string $token, string $user, Phar $phar, string $owner, string $repo, string $project, string $version, string $branch, string $prefix, int $shade, ?array $pluginApis): int {
+        $virion = self::findVirion("$owner/$repo", $project, $version, function($virionApis) use ($pluginApis) {
+            if($virionApis === "*" || $virionApis === null){
+                // no API specified ("*" in db), assume it's compatible with every api.
+                return true;
+            }
+            if($pluginApis === "*" || $pluginApis === null) {
+                // there is no api limit on the virion, but one on the virion being injected.
+                // therefor it's possible for virion to be run on a version outside the injecting virions supported range.
+                return false;
+            }
+            foreach($pluginApis as $pluginApi) {
+                $satisfied = false;
+                foreach($virionApis as $virionApi) {
+                    if(Semver::satisfies($pluginApi, "^$virionApi")) {
+                        $satisfied = true;
+                    }
+                }
+                if(!$satisfied) {
+                    // At least one of the plugins APIs is not satisfied by this virion.
+                    return false;
+                }
+            }
+            // All the plugins APIs are satisfied by this virion.
+            return true;
         }, $token, $user, $branch);
 
         echo "[*] Using virion version {$virion->version} from build #{$virion->buildNumber}\n";

@@ -99,7 +99,7 @@ class NowHereProjectBuilder extends ProjectBuilder {
         $this->addDir($result, $zipball, $phar, $project->path . "entry/", "entry/");
         $this->addDir($result, $zipball, $phar, $project->path . "resources/", "resources/");
 
-        Virion::processLibs($phar, $zipball, $project, function() use ($mainClass) {
+        Virion::processLibs($phar, $zipball, $project, (array)$info->api, function() use ($mainClass) {
             return implode("\\", array_slice(explode("\\", $mainClass), 0, -1)) . "\\";
         });
 

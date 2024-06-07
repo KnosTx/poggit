@@ -111,7 +111,8 @@ class PoggitVirionBuilder extends ProjectBuilder {
                 }
             }
         }
-        Virion::processLibs($phar, $zipball, $project, function() use ($manifestData) {
+        $api = isset($manifestData["api"]) ? ((array) $manifestData["api"]) : null;
+        Virion::processLibs($phar, $zipball, $project, $api, function() use ($manifestData) {
             return $manifestData["antigen"] . "\\";
         });
         if($phar->getMetadata()["buildClass"] !== "PR") {

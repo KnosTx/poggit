@@ -187,11 +187,11 @@ class DefaultProjectBuilder extends ProjectBuilder {
                     ($doLint ? $project->manifest["lint"] : null));
             }
         }
-
-        Virion::processLibs($phar, $zipball, $project, function() use ($mainClass) {
+        $apis = yaml_parse($pluginYml)["api"];
+        Virion::processLibs($phar, $zipball, $project, (array)$apis, function() use ($mainClass) {
             return implode("\\", array_slice(explode("\\", $mainClass), 0, -1)) . "\\";
         });
-        $apis = yaml_parse($pluginYml)["api"];
+
         $majorApis = [];
         if(!is_array($apis)){
             $majorApis[] = $apis[0];
