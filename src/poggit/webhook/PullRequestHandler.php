@@ -125,8 +125,7 @@ class PullRequestHandler extends WebhookHandler {
 
         $buildByDefault = true;
 
-        ProjectBuilder::buildProjects($zipball, $repo, $projects, $commits, $cause, new TriggerUser($this->data->sender), function(WebhookProjectModel $project): int {
-            return ++$project->prBuilds;
-        }, ProjectBuilder::BUILD_CLASS_PR, $branch, $pr->head->sha, $buildByDefault);
+        ProjectBuilder::buildProjects($zipball, $repo, $projects, $commits, $cause, new TriggerUser($this->data->sender),
+            ProjectBuilder::BUILD_CLASS_PR, ProjectBuilder::BUILD_CLASS_PR, $branch, $pr->head->sha, $buildByDefault);
     }
 }

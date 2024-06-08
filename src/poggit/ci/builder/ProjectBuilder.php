@@ -137,7 +137,7 @@ abstract class ProjectBuilder {
      * @param bool                  $buildByDefault
      * @throws WebhookException
      */
-    public static function buildProjects(RepoZipball $zipball, stdClass $repoData, array $projects, array $commits, V2BuildCause $cause, TriggerUser $triggerUser, callable $buildNumber, int $buildClass, string $branch, string $sha, bool $buildByDefault) {
+    public static function buildProjects(RepoZipball $zipball, stdClass $repoData, array $projects, array $commits, V2BuildCause $cause, TriggerUser $triggerUser, int $buildType, int $buildClass, string $branch, string $sha, bool $buildByDefault) {
         $cnt = (int) Mysql::query("SELECT COUNT(*) AS cnt FROM builds WHERE triggerUser = ? AND 
             UNIX_TIMESTAMP() - UNIX_TIMESTAMP(created) < 604800", "i", $triggerUser->id)[0]["cnt"];
         echo "Starting from internal #$cnt\n";
@@ -213,7 +213,7 @@ MESSAGE
             /** @var ProjectBuilder $builder */
             $builder = new $builderClass();
             --self::$moreBuilds;
-            $builder->init($zipball, $repoData, $project, $cause, $triggerUser, $buildNumber, $buildClass, $branch, $sha);
+            $builder->init($zipball, $repoData, $project, $cause, $triggerUser, $buildType, $buildClass, $branch, $sha);
         }
         self::flushDiscordQueue();
     }
@@ -263,10 +263,10 @@ MESSAGE
         return array_keys($changedProjects);
     }
 
-    private function init(RepoZipball $zipball, stdClass $repoData, WebhookProjectModel $project, V2BuildCause $cause, TriggerUser $triggerUser, callable $buildNumberGetter, int $buildClass, string $branch, string $sha) {
+    private function init(RepoZipball $zipball, stdClass $repoData, WebhookProjectModel $project, V2BuildCause $cause, TriggerUser $triggerUser, int $buildType, int $buildClass, string $branch, string $sha) {
         $buildId = (int) Mysql::query("SELECT IFNULL(MAX(buildId), 19200) + 1 AS nextBuildId FROM builds")[0]["nextBuildId"];
-        Mysql::query("INSERT INTO builds (buildId, projectId, buildsAfterThis) VALUES (?, ?, ?)", "iii", $buildId, $project->projectId, self::$moreBuilds);
-        $buildNumber = $buildNumberGetter($project);
+        $buildNumber = (int) Mysql::query("SELECT IFNULL(MAX(internal), 0) + 1 AS nextBuildNumber FROM builds WHERE projectId = ? and class = ?", "ii", $project->projectId, $buildType)[0]["nextBuildNumber"];
+        Mysql::query("INSERT INTO builds (buildId, projectId, buildsAfterThis, internal) VALUES (?, ?, ?, ?)", "iiii", $buildId, $project->projectId, self::$moreBuilds, $buildNumber);
         $buildClassName = self::$BUILD_CLASS_HUMAN[$buildClass];
 
         $accessFilters = [];
