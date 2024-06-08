@@ -167,7 +167,7 @@ MESSAGE
         $buildByDefault = $manifest["build-by-default"] ?? true;
 
         ProjectBuilder::buildProjects($zipball, $repo, $projects, $this->data->commits, $cause, new TriggerUser($this->data->sender),
-            ProjectBuilder::BUILD_CLASS_DEV, ProjectBuilder::BUILD_CLASS_DEV, $branch, $this->data->after, $buildByDefault);
+            ProjectBuilder::BUILD_CLASS_DEV, $branch, $this->data->after, $buildByDefault);
     }
 
     /**
