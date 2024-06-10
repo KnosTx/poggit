@@ -155,7 +155,6 @@ final class Meta {
         }
 
         Lang::checkDeps();
-//        GlobalVarStream::register();
         self::$log = new Log;
         self::$input = file_get_contents("php://input");
         self::$debugIndent = isset($_REQUEST["debug-indent"]);
