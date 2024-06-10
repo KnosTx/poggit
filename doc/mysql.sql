@@ -302,16 +302,6 @@ CREATE TABLE `release_votes` (
     KEY `releaseId` (`releaseId`),
     FOREIGN KEY (`releaseId`) REFERENCES `releases` (`releaseId`) ON DELETE CASCADE
 );
-DROP TABLE IF EXISTS `release_watches`;
-CREATE TABLE `release_watches` (
-    `uid`       int unsigned,
-    `projectId` int unsigned
-);
-DROP TABLE IF EXISTS `category_watches`;
-CREATE TABLE `category_watches` (
-    `uid`       int unsigned,
-    `category`  smallint unsigned NOT NULL
-);
 DROP TABLE IF EXISTS `event_timeline`;
 CREATE TABLE `event_timeline` (
     `eventId`   bigint unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
