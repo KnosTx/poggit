@@ -103,7 +103,7 @@ class ReleaseStateChangeAjax extends AjaxModule {
                 "" : ", updateTime = CURRENT_TIMESTAMP";
             Mysql::query("UPDATE releases SET state = ? {$updateTime} WHERE releaseId = ?", "ii", $newState, $releaseId);
 
-            $maxRelId = (int) Mysql::query("SELECT IFNULL(MAX(releaseId), -1) id FROM releases WHERE projectId = ? AND state >= ?", "ii", $projectId, Release::STATE_VOTED)[0]["id"];
+            $maxRelId = (int) Mysql::query("SELECT IFNULL(MAX(releaseId), -1) id FROM releases WHERE projectId = ? AND state >= ?", "ii", $projectId, Release::STATE_APPROVED)[0]["id"];
             $obsoleteFlag = Release::FLAG_OBSOLETE;
             if($maxRelId !== -1) {
                 Mysql::query("UPDATE releases SET flags = CASE
@@ -197,7 +197,7 @@ class ReleaseStateChangeAjax extends AjaxModule {
             "description" => $shortDesc,
             "url" => "https://poggit.pmmp.io/p/{$name}/{$version}",
             "timestamp" => date(DATE_ATOM),
-            "color" => $newState === Release::STATE_VOTED ? 0x458EFF : ($newState === Release::STATE_FEATURED ? 0x008000 : 0x3CB371),
+            "color" => $newState === Release::STATE_FEATURED ? 0x008000 : 0x3CB371,
             "fields" => [
                 [
                     "name" => "Category",

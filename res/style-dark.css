@@ -1654,29 +1654,6 @@ div.form-table div.form-row div .explain.explain-after-input {
 #release-description-container-vertical .ui-tabs-panel {
     flex: 1 1 !important;
 }
-.upvotes {
-    margin-left:  20px;
-    margin-right: 10px;
-    display:      flex;
-    align-items:  flex-start;
-}
-.upvotes img {
-    margin-right: 5px;
-    width:        32px;
-}
-.downvotes {
-    margin-left:  10px;
-    margin-right: 10px;
-    display:      flex;
-    align-items:  flex-end;
-}
-.downvotes img {
-    margin-right: 5px;
-    width:        32px;
-}
-#voteup-dialog label {
-    word-break: break-word;
-}
 /** GENERATED */
 /* control part of toggle */
 .list-plugins-sidebar #toggle-wrapper .wrapper-header {
@@ -2550,16 +2527,6 @@ a:focus, a:hover {
     }
     .release-score img {
         height: 12px;
-    }
-    .downvotes {
-        margin-left:  0;
-        margin-right: 0;
-    }
-    .downvotes img {
-        width: 24px;
-    }
-    .upvotes img {
-        width: 24px;
     }
     .release-review-intent img {
         height: 16px;

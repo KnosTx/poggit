@@ -120,7 +120,6 @@ class ReleaseShieldModule extends Module {
             self::filterValue((int) $result["state"], [
                 Release::STATE_SUBMITTED => "red",
                 Release::STATE_CHECKED => "orange",
-                Release::STATE_VOTED => "yellowgreen",
                 Release::STATE_APPROVED => "green",
                 Release::STATE_FEATURED => "brightgreen",
             ])

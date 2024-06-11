@@ -291,17 +291,6 @@ CREATE TABLE `release_reply_reviews` (
     PRIMARY KEY (`reviewId`,`user`),
     FOREIGN KEY (`reviewId`) REFERENCES `release_reviews` (`reviewId`) ON DELETE CASCADE
 );
-DROP TABLE IF EXISTS `release_votes`;
-CREATE TABLE `release_votes` (
-    `user`      int unsigned,
-    `releaseId` int unsigned,
-    `vote`      tinyint,
-    `message`   varchar(255) DEFAULT '',
-    `updated`   timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY `user_releaseId` (`user`,`releaseId`),
-    KEY `releaseId` (`releaseId`),
-    FOREIGN KEY (`releaseId`) REFERENCES `releases` (`releaseId`) ON DELETE CASCADE
-);
 DROP TABLE IF EXISTS `event_timeline`;
 CREATE TABLE `event_timeline` (
     `eventId`   bigint unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,

@@ -48,7 +48,7 @@ class GuestHomePage extends VarPage {
           PMMP PocketMine. For more information on setting up a PocketMine Server please see the
           <a target="_blank" href="http://pmmp.readthedocs.io/en/rtfd/installation.html">documentation</a>
           , or browse the <a target="_blank" href="http://forums.pmmp.io">PMMP forums.</a> Server owners can
-          download plugins, subscribe to projects, or vote for and review plugins. Developers can log in with
+          download plugins, subscribe to projects, and review plugins. Developers can log in with
           a GitHub account to build plugins directly from Github, and submit them for release on Poggit.</p>
         <p>
           Plugins released on Poggit are reviewed by staff and members of the community. You can filter plugins
@@ -66,8 +66,8 @@ class GuestHomePage extends VarPage {
           <p>Plugin Builds created: <?= $simpleStats->pluginBuilds ?></p>
           <p>Virion Projects created: <?= $simpleStats->virionProjects ?></p>
           <p>Virion Builds created: <?= $simpleStats->virionBuilds ?></p>
-          <p>Released plugins (at least one version <em>Voted</em> or above): <?= $simpleStats->releases ?></p>
-          <p>Compatible released plugins (at least one version <em>Voted</em> or above,
+          <p>Released plugins (at least one version <em>Approved</em> or above): <?= $simpleStats->releases ?></p>
+          <p>Compatible released plugins (at least one version <em>Approved</em> or above,
             compatible with <?= PocketMineApi::$LATEST_COMPAT ?>): <?= $simpleStats->compatibleReleases ?></p>
           <p>Total released plugin downloads: <?= $simpleStats->pluginDownloads ?></p>
           <p>Number of IP addresses visiting Poggit: <?= $simpleStats->visitingIps ?></p>

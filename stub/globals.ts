@@ -60,7 +60,6 @@ declare const PoggitConsts: {
         MAX_KEYWORD_LENGTH: 20,
         MIN_SHORT_DESC_LENGTH: 10,
         MAX_SHORT_DESC_LENGTH: 128,
-        VOTED_THRESHOLD: 5,
         MAX_REVIEW_LENGTH: 512
     },
     ReleaseState: {
@@ -68,7 +67,6 @@ declare const PoggitConsts: {
         rejected: 1,
         submitted: 2,
         checked: 3,
-        voted: 4,
         approved: 5,
         featured: 6
     }
@@ -275,6 +273,4 @@ declare const releaseDetails: {
     },
     rejectPath: string,
     isMine: boolean
-    myVote: number
-    myVoteMessage: string
 };

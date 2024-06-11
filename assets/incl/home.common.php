@@ -19,7 +19,7 @@ use poggit\utils\PocketMineApi;
 </p>
 <h2 class="motto">Review Plugins</h2>
 <p>
-  You can vote on a plugin and give comments to let others know if the plugin is good.
+  You can review a plugin and give comments to let others know if the plugin is good.
   You can also give suggestions there, but remember not to use reviews as the bug tracker!
 </p>
 <h2 class="motto">Tools for Developers</h2>

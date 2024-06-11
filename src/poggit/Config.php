@@ -42,5 +42,4 @@ class Config {
     const RECENT_BUILDS_RANGE = 86400;
     const MIN_PUBLIC_RELEASE_STATE = Release::STATE_CHECKED;
     const MIN_DEV_STATE = Release::STATE_CHECKED; // minimum state required to get development builds shipping
-    const VOTED_THRESHOLD = 5;
 }

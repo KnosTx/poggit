@@ -93,10 +93,6 @@ class ReleaseDetailsModule extends HtmlModule {
     private $previousApprovedReleaseCommit;
     private $previousApprovedReleaseVersion;
     private $changelogData = null;
-    private $upVotes = [];
-    private $downVotes = [];
-    private $myVote;
-    private $myVoteMessage;
     private $authors;
     private $releaseStats;
     private $visibleReleases;
@@ -133,7 +129,7 @@ class ReleaseDetailsModule extends HtmlModule {
             $projects = Mysql::query($stmt, "s", $name);
             if(count($projects) === 0) Meta::redirect("plugins?term=" . urlencode($name) . "&error=" . urlencode("No plugins called $name"));
             $ownerOrStaff = $isStaff || strtolower($user) === strtolower($projects[0]["author"]);
-            $minVisibleState = $ownerOrStaff ? Release::STATE_DRAFT : Release::STATE_VOTED;
+            $minVisibleState = $ownerOrStaff ? Release::STATE_DRAFT : Release::STATE_APPROVED;
             $i = 0;
             foreach($projects as $project) {
                 if($project["state"] >= $minVisibleState) {
@@ -166,8 +162,8 @@ class ReleaseDetailsModule extends HtmlModule {
 
             if(count($projects) > 1) {
                 $ownerOrStaff = $isStaff || strtolower($user) === strtolower($projects[0]["author"]);
-                $minVisibleState = $ownerOrStaff ? Release::STATE_DRAFT : ($session->isLoggedIn() ? Release::STATE_CHECKED : Release::STATE_VOTED);
-                $minVisibleCommit = $ownerOrStaff ? Release::STATE_DRAFT : Release::STATE_VOTED;
+                $minVisibleState = $ownerOrStaff ? Release::STATE_DRAFT : ($session->isLoggedIn() ? Release::STATE_CHECKED : Release::STATE_APPROVED);
+                $minVisibleCommit = $ownerOrStaff ? Release::STATE_DRAFT : Release::STATE_APPROVED;
                 $i = 0;
                 $found = false;
                 foreach($projects as $project) {
@@ -294,21 +290,7 @@ class ReleaseDetailsModule extends HtmlModule {
                 $this->release["reqr"]["isRequire"][] = (int) $row["isRequire"];
             }
         }
-        //Votes
-        $myVote = Mysql::query("SELECT vote, message FROM release_votes WHERE releaseId = ? AND user = ?", "ii", $this->release["releaseId"], $uid);
-        $this->myVote = (count($myVote) > 0) ? $myVote[0]["vote"] : 0;
-        $this->myVoteMessage = (count($myVote) > 0) ? $myVote[0]["message"] : "";
-
         $this->releaseStats = Release::getReleaseStats($this->release["releaseId"], $this->release["projectId"], $this->release["created"]);
-
-        foreach(Mysql::query("SELECT u.name AS user FROM release_votes rv
-INNER JOIN users u ON rv.user = u.uid WHERE  rv.releaseId = ? and rv.vote = 1", "i", $this->release["releaseId"]) as $row) {
-            $this->upVotes[] = $row["user"];
-        }
-        foreach(Mysql::query("SELECT u.name AS user FROM release_votes rv
-INNER JOIN users u ON rv.user = u.uid WHERE  rv.releaseId = ? and rv.vote = -1", "i", $this->release["releaseId"]) as $row) {
-            $this->downVotes[] = $row["user"];
-        }
 
         $this->state = (int) $this->release["state"];
         $writePerm = GitHub::testPermission($this->release["author"] . "/" . $this->release["repo"], $session->getAccessToken(), $session->getName(), "push");
@@ -402,8 +384,6 @@ INNER JOIN users u ON rv.user = u.uid WHERE  rv.releaseId = ? and rv.vote = -1",
               ],
               "rejectPath" => "repos/{$this->release["author"]}/{$this->release["repo"]}/commits/{$this->release["sha"]}/comments",
               "isMine" => $isMine,
-              "myVote" => $this->myVote,
-              "myVoteMessage" => $this->myVoteMessage,
           ];
           ?>
         <script>var releaseDetails = <?= json_encode($releaseDetails, JSON_UNESCAPED_SLASHES) ?>;</script>
@@ -572,18 +552,6 @@ INNER JOIN users u ON rv.user = u.uid WHERE  rv.releaseId = ? and rv.vote = -1",
                 <div class="release-description-header">
                   <div class="release-description">Plugin
                     Description <?php Mbd::displayAnchor("description") ?></div>
-                    <?php if($this->state === Release::STATE_CHECKED) { ?>
-                      <div id="upvote" title='Approve'
-                           class="upvotes vote-button">
-                        <img src='<?= Meta::root() ?>res/upvote.png'/>
-                          <?= count($this->upVotes) ?? "0" ?>
-                      </div>
-                      <div id="downvote" title='Reject'
-                           class="downvotes vote-button">
-                        <img src='<?= Meta::root() ?>res/downvote.png'/>
-                          <?= count($this->downVotes) ?? "0" ?>
-                      </div>
-                    <?php } ?>
                     <div>
                       <a href="https://github.com/<?= $this->release["author"] ?>/<?= $this->release["repo"] ?>/issues"
                         class="btn btn-secondary"
@@ -842,50 +810,6 @@ INNER JOIN users u ON rv.user = u.uid WHERE  rv.releaseId = ? and rv.vote = -1",
                 </select>
               </form>
             <?php } ?>
-        </div>
-      <?php } ?>
-      <?php if($session->isLoggedIn() && $this->state === Release::STATE_CHECKED) { ?>
-        <!-- VOTING DIALOGUES -->
-        <div id="voteup-dialog" title="Voting <?= $this->projectName ?>">
-          <form>
-            <label plugin="plugin"><h4><?= $this->projectName ?></h4></label>
-              <?php if($this->myVote > 0) { ?>
-                <label><h6>You have already voted to accept this plugin</h6></label>
-              <?php } elseif($this->myVote < 0) { ?>
-                <label><h6>You previously voted to reject this plugin</h6></label>
-                <label><h6>Click below to change your vote</h6></label>
-              <?php } else { ?>
-                <label><h6>Click "Approve" to approve this plugin</h6></label>
-              <?php } ?>
-            <!-- Allow form submission with keyboard without duplicating the dialog button -->
-            <input type="submit" tabindex="-1" style="position:absolute; top:-1000px;">
-          </form>
-        </div>
-        <div id="votedown-dialog" title="Voting <?= $this->projectName ?>">
-          <form>
-            <label plugin="plugin"><h4><?= $this->projectName ?></h4></label>
-              <?php if($this->myVote > 0) { ?>
-                <label><h6>You previously voted to accept this plugin</h6></label>
-                <label><h6>Click below to reject it, and leave a short reason. The reason will only be visible
-                    to
-                    admins to prevent abuse.</h6></label>
-              <?php } elseif($this->myVote < 0) { ?>
-                <label><h6>You have already voted to reject this plugin</h6></label>
-                <label><h6>Click below to confirm and update the reason. The reason will only be visible to
-                    admins to prevent abuse.</h6></label>
-              <?php } else { ?>
-                <label><h6>Click 'Reject' to reject this plugin, and leave a short reason below. <strong>Only
-                      admins can see this message.</strong></h6></label>
-                <label><h6>Do not reject plugins just because they are too old; they should just stay there and you
-                    should not use them.</strong></h6></label>
-              <?php } ?>
-            <textarea id="vote-message"
-                      maxlength="255" rows="3"
-                      cols="20" class="vote-message"><?= $this->myVoteMessage ?? "" ?></textarea>
-            <!-- Allow form submission with keyboard without duplicating the dialog button -->
-            <input type="submit" tabindex="-1" style="position:absolute; top:-1000px;">
-            <label id="vote-error" class="vote-error"></label>
-          </form>
         </div>
       <?php } ?>
       <div id="release-description-bad-dialog" title="Failed to paginate plugin description." style="display: none;">

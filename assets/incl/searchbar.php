@@ -63,11 +63,11 @@ use poggit\utils\PocketMineApi;
                 <li class="release-sort-row release-sort-row-template">
                     <select class="release-sort-category">
                         <option value="popularity">Popularity</option>
-                        <option value="state-change-date">Date featured/approved/voted</option>
+                        <option value="state-change-date">Date featured/approved</option>
                         <option value="submit-date">Date submitted (latest version)</option>
                         <option value="first-submit">Date submitted (earliest version)</option>
                         <!--                <option value="submit-date-first">Date submitted (first version)</option>-->
-                        <option value="state">Featured &gt; Approved &gt; Voted</option>
+                        <option value="state">Featured &gt; Approved</option>
                         <option value="total-downloads">Downloads (total)</option>
                         <option value="downloads">Downloads (latest version)</option>
                         <option value="mean-review">Average review score (latest version)</option>

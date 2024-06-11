@@ -48,7 +48,7 @@ class Release {
     const STATE_REJECTED = 1;
     const STATE_SUBMITTED = 2;
     const STATE_CHECKED = 3;
-    const STATE_VOTED = 4;
+    //const STATE_VOTED = 4; // REMOVED
     const STATE_APPROVED = 5;
     const STATE_FEATURED = 6;
     public static $STATE_ID_TO_HUMAN = [
@@ -56,7 +56,7 @@ class Release {
         Release::STATE_REJECTED => "Rejected",
         Release::STATE_SUBMITTED => "Submitted",
         Release::STATE_CHECKED => "Checked",
-        Release::STATE_VOTED => "Approved",
+        //Release::STATE_VOTED => "Approved", // REMOVED
         Release::STATE_APPROVED => "Approved",
         Release::STATE_FEATURED => "Featured"
     ];
@@ -65,7 +65,7 @@ class Release {
         "rejected" => Release::STATE_REJECTED,
         "submitted" => Release::STATE_SUBMITTED,
         "checked" => Release::STATE_CHECKED,
-        "voted" => Release::STATE_VOTED,
+        //"voted" => Release::STATE_VOTED, // REMOVED
         "approved" => Release::STATE_APPROVED,
         "featured" => Release::STATE_FEATURED
     ];
@@ -273,7 +273,7 @@ class Release {
                 INNER JOIN projects ON projects.projectId = releases.projectId
                 INNER JOIN repos ON repos.repoId = projects.repoId
                 WHERE state >= ? AND releases.releaseId = (SELECT MAX(rel.releaseId) FROM releases rel WHERE rel.projectId = releases.projectId)
-            ORDER BY $orderBy DESC LIMIT $count", "i", self::STATE_VOTED);
+            ORDER BY $orderBy DESC LIMIT $count", "i", self::STATE_APPROVED);
         $adminLevel = Meta::getAdmlv($session->getName());
         foreach($plugins as $plugin) {
             if($session->getName() === $plugin["author"] ||
@@ -365,7 +365,7 @@ class Release {
           <span class="plugin-version">v<?= htmlspecialchars($plugin->version) ?></span>
           <span class="plugin-author"><?php Mbd::displayUser($plugin->author) ?></span>
         </div>
-          <?php if($plugin->state !== Release::STATE_APPROVED && $plugin->state !== Release::STATE_VOTED) { ?>
+          <?php if($plugin->state !== Release::STATE_APPROVED) { ?>
         <span class="plugin-state-<?= $plugin->state ?>">
           <?php
               $stateName = self::$STATE_ID_TO_HUMAN[$plugin->state];
