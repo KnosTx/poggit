@@ -21,10 +21,9 @@ use poggit\utils\PocketMineApi;
                            size="20">
                 </div>
                 <select id="pluginSearchField">
-                    <option value="plugins/called/" selected>Plugin</option>
-                    <option value="plugins/by/">Author</option>
+                    <option value="plugin" selected>Plugin</option>
+                    <option value="author">Author</option>
                 </select>
-                <div class="action resptable-cell" id="searchButton">Search</div>
             </div>
             <div class="release-list-buttons">
                 <div onclick="window.location = '<?= Meta::root() ?>plugins/authors';"

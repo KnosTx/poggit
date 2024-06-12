@@ -20,6 +20,8 @@ $(function() {
     ];
 
     function filterReleaseResults() {
+        var selectedName = $("#pluginSearch").val();
+        var selectedNameMode = $("#pluginSearchField").val();
         var selectedCat = $('#category-list').val();
         var selectedCatName = $('#category-list option:selected').text();
         var selectedAPI = $('#api-list').val();
@@ -40,6 +42,7 @@ $(function() {
         if(!$.isEmptyObject(mainReleaseList.data('paginate'))) mainReleaseList.data('paginate').kill();
 
         $('.plugin-entry').each(function(idx, el) {
+            var name = selectedNameMode === "plugin" ? $(el).find('.plugin-name a').text() : $(el).find('.plugin-author').text();
             var cats = $(el).children('#plugin-categories');
             var catArray = cats.attr("value").split(',');
             var apis = $(el).children('#plugin-apis');
@@ -55,16 +58,19 @@ $(function() {
                     break;
                 }
             }
-            $(el).attr("hidden", !catArray.includes(selectedCat) && Number(selectedCat) !== 0 || selectedAPIIndex > 0 && !compatibleAPI);
+            var nameMatch = name.toLowerCase().indexOf(selectedName.toLowerCase()) >= 0;
+            $(el).attr("hidden", !nameMatch || !catArray.includes(selectedCat) && Number(selectedCat) !== 0 || selectedAPIIndex > 0 && !compatibleAPI);
         });
 
         sortReleases();
 
         var mainReleaseList = $("#main-release-list");
         var visiblePlugins = mainReleaseList.find('.plugin-entry:visible').length;
-        // if(visiblePlugins === 0) {
-        //alert("No Plugins Found Matching " + selectedAPI + " in " + selectedCatName);
-        // }
+        if(visiblePlugins === 0) {
+            $("#no-plugins").show();
+        } else {
+            $("#no-plugins").hide();
+        }
         if(visiblePlugins > 24 && getParameterByName("usePages", sessionData.opts.usePages !== false ? "on" : "off") === "on") {
             mainReleaseList.paginate({
                 perPage: 24,
@@ -166,39 +172,16 @@ $(function() {
         sortDialog.dialog("open");
     });
 
-    function doPluginSearch() {
-        if($("#pluginSearch").val().length === 0){
-            alert("No search query found, please enter a search query.")
-            return;
-        }
-        if($("#pluginSearch").val().indexOf(" ") !== -1){
-            alert("Please do not use spaces in your search query.");
-            return;
-        }
-        var searchText = encodeURIComponent($("#pluginSearch").val());
-        var searchMode = $("#pluginSearchField").val();
-        window.location = getRelativeRootPath() + searchMode + searchText;
-    }
-
     var pluginSearch = $("#pluginSearch");
-    pluginSearch.on("keyup", function(e) {
-        if(e.keyCode === 13) {
-            doPluginSearch();
-        }
+    pluginSearch.on("input", (event) => {
+        filterReleaseResults();
+    });
+
+    $("#pluginSearchField").on("change", (event) => {
+        filterReleaseResults();
     });
 
     if(!window.matchMedia('(max-width: 900px)').matches) {
         pluginSearch.focus();
     }
-
-    $("#searchButton").on("click", function(e) {
-        doPluginSearch();
-    });
-    $("#searchAuthorsButton").on("click", function() {
-        if($("#searchAuthorsQuery").val().indexOf(" ") !== -1){
-            alert("Please do not use spaces in your search query.");
-            return;
-        }
-        window.location = getRelativeRootPath() + "plugins/by/" + $("#searchAuthorsQuery").val();
-    });
 });

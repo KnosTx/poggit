@@ -171,6 +171,11 @@ class MainReleaseListPage extends AbstractReleaseListPage {
                 </div>
             <?php
         }
+        ?>
+        <div class="alert alert-warning" id="no-plugins" style="display: none;">
+            No plugins could be found, try adjusting the search parameters.
+        </div>
+      <?php
         if($this->error) {
             http_response_code(404); ?>
           <div id="fallback-error"><?= Mbd::esq($this->error) ?></div>
