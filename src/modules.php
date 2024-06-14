@@ -186,6 +186,7 @@ register_module("review.assign", ReleaseAssignAjax::class);
 register_module("tos", TosModule::class);
 register_module("hideTos", HideTosModule::class);
 
+register_module("rules", RulesEditModule::class);
 register_module("rules.edit", RulesEditModule::class);
 register_module("rule.edit.ajax", RulesEditAjax::class);
 register_module("rule.add.ajax", RulesAddAjax::class);
