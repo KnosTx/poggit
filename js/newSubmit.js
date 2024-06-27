@@ -129,7 +129,7 @@ $(function() {
                 valid: !this.invalid,
                 message: "Invalid plugin name: " + this.$getRow().find(".form-input-react").text()
             };
-        }, false, submitData.mode !== "submit"));
+        }, true, true));
         submitEntries.push(new SubmitFormEntry("shortDesc", submitData.fields.shortDesc, "Synopsis", "submit2-tagline", StringEntry({
             size: 64,
             maxlength: 128
@@ -179,7 +179,7 @@ $(function() {
                 valid: !this.invalid,
                 message: "Invalid plugin version: " + this.$getRow().find(".form-input-react").text()
             };
-        }, true, submitData.mode === "edit"));
+        }, true, true));
         submitEntries.push(new SubmitFormEntry("preRelease", submitData.fields.preRelease, "Pre-release?", "submit2-prerelease", BooleanEntry, function() {
             return {valid: true};
         }));
@@ -247,7 +247,7 @@ $(function() {
                 valid: this.getValue().length >= 1,
                 message: "There must be at least one supported API version range!"
             };
-        }, true, submitData.mode === "edit" && submitData.refRelease.state !== 0));
+        }, true, true));
 
         submitEntries.push("Other details");
         submitEntries.push(new SubmitFormEntry("license", submitData.fields.license, "License", "submit2-license", LicenseEntry, function() {

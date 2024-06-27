@@ -300,12 +300,12 @@ class ReleaseDetailsModule extends HtmlModule {
         $this->projectName = $this->release["projectName"];
         $this->name = $this->release["name"];
         $this->buildInternal = $this->release["internal"];
-        $this->description = $this->release["description"] ? file_get_contents(ResourceManager::getInstance()->getResource($this->release["description"])) : "No Description";
+        $this->description = "dESC here"; //$this->release["description"] ? file_get_contents(ResourceManager::getInstance()->getResource($this->release["description"])) : "No Description";
         $this->version = $this->release["version"];
         $this->shortDesc = $this->release["shortDesc"];
         $this->adminNote = $this->release["adminNote"];
         $this->licenseDisplayStyle = ($this->release["license"] === "custom") ? "display: true" : "display: none";
-        $this->licenseText = $this->release["licenseRes"] ? file_get_contents(ResourceManager::getInstance()->getResource($this->release["licenseRes"])) : "";
+        $this->licenseText = "license text here.."; //$this->release["licenseRes"] ? file_get_contents(ResourceManager::getInstance()->getResource($this->release["licenseRes"])) : "";
         $this->license = $this->release["license"];
         if($this->release["changelog"]) {
             $rows = Mysql::query("SELECT version, resourceId, type FROM releases INNER JOIN resources ON resourceId = changelog
@@ -316,7 +316,7 @@ class ReleaseDetailsModule extends HtmlModule {
                     "text" => "Initial version",
                     "type" => "init"
                 ] : [
-                    "text" => file_get_contents(ResourceManager::pathTo((int) $row["resourceId"], $row["type"])),
+                    "text" => "changelog?",//file_get_contents(ResourceManager::pathTo((int) $row["resourceId"], $row["type"])),
                     "type" => $row["type"],
                 ];
             }
