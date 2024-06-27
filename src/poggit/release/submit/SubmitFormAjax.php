@@ -365,6 +365,9 @@ EOD
             "refDefault" => $this->refRelease->name,
             "srcDefault" => $this->pluginYml["name"] ?? null
         ];
+        if($fields["name"]["refDefault"] !== null and $fields["name"]["srcDefault"] !== $fields["name"]["refDefault"]){
+            $this->exitBadRequest("Plugin name does not match between plugin.yml and previous release names. Please update your plugin.yml name to match previous release names.");
+        }
         $fields["shortDesc"] = [
             "remarks" => <<<EOD
 A brief one-line description of your plugin. One or two <em>simple</em> and <em>attractive</em> sentences describing your
@@ -560,9 +563,13 @@ change the values in your <code>plugin.yml</code>.<br/>
 If you include an API version on which your plugin does not work, this plugin will be rejected.
 EOD
             ,
-            "refDefault" => $this->refRelease->spoons,
+            "refDefault" => null,
             "srcDefault" => self::apisToRanges((array) ($this->pluginYml["api"] ?? [])),
         ];
+
+        if(count($fields["spoons"]["srcDefault"]) === 0) {
+            $this->exitBadRequest("No valid API range found in plugin.yml, please verify the 'api' field is correct.");
+        }
 
         $detectedDeps = [];
         foreach((array) ($this->pluginYml["depend"] ?? []) as $name) {

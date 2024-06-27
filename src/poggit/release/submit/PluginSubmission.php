@@ -160,7 +160,7 @@ class PluginSubmission {
     private function strictValidate() {
         if($this->mode === SubmitFormAjax::MODE_SUBMIT) {
             // Compare release name with previous release (if plugins had a different name before it would suddenly change, this forces them to change in plugin.yml)
-            if($this->name !== $this->refRelease->name) {
+            if($this->name !== ($this->refRelease?->name ?? $this->name)) {
                 throw new SubmitException("Name in plugin.yml does not match previous releases name. Please update plugin.yml to match the previous name.");
             }
             if(!Release::validateName($this->name, $error)) throw new SubmitException($error);

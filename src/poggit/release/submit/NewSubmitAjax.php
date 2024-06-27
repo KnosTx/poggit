@@ -51,11 +51,7 @@ class NewSubmitAjax extends AjaxModule {
         Lang::copyToObject($form, $submission); // do this before other assignments to prevent overriding
         $submission->action = $action;
         Lang::copyToObject($args, $submission);
-        if($submission->mode !== "submit") $submission->name = $submission->refRelease->name;
-        if($submission->mode === "edit") {
-            $submission->version = $submission->refRelease->version;
-            $submission->spoons = $submission->spoons ?: $submission->refRelease->spoons;
-        } else {
+        if($submission->mode !== "edit") {
             $submission->outdated = false;
         }
         if($submission->lastValidVersion === false) $submission->changelog = false;
