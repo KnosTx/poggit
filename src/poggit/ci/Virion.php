@@ -222,7 +222,7 @@ class Virion {
             throw new UserFriendlyException("No read access to repo $repoIdentifier");
         }
         $repoCondition = is_numeric($repoIdentifier) ? "repos.repoId=?" : "CONCAT(repos.owner, '/', repos.name) = ?";
-        $rows = Mysql::query("SELECT v.version, v.api, v.buildId, b2.resourceId, UNIX_TIMESTAMP(b2.created) AS created, b2.internal
+        $rawRows = Mysql::query("SELECT v.version, v.api, v.buildId, b2.resourceId, UNIX_TIMESTAMP(b2.created) AS created, b2.internal
             FROM (SELECT MAX(virion_builds.buildId) AS buildId FROM virion_builds
                 INNER JOIN builds ON virion_builds.buildId = builds.buildId
                 INNER JOIN projects ON builds.projectId = projects.projectId
@@ -231,11 +231,15 @@ class Virion {
             INNER JOIN virion_builds v ON v1.buildId = v.buildId
             INNER JOIN builds b2 ON v.buildId = b2.buildId",
             is_numeric($repoIdentifier) ? "issi" : "sssi", $repoIdentifier, $project, $branch, isset($noBranch) && $noBranch ? 1 : 0);
-        $rows = array_values(array_filter($rows, function($row) use ($versionConstraint, $apiFilter) {
+        $rows = array_values(array_filter($rawRows, function($row) use ($versionConstraint, $apiFilter) {
             return Semver::satisfies($row["version"], $versionConstraint) and $apiFilter(json_decode($row["api"]));
         }));
         if(count($rows) === 0) {
-            throw new UserFriendlyException("No virion builds are available in $repoIdentifier/$project");
+            if(count($rawRows) === 0){
+                throw new UserFriendlyException("No virion builds are available in $repoIdentifier/$project");
+            }else {
+                throw new UserFriendlyException("No supported virion builds are available in $repoIdentifier/$project that satisfy both the version specified ($versionConstraint) and API(s) of your plugin.");
+            }
         }
         $best = $rows[0];
         foreach($rows as $row) {
