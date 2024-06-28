@@ -298,11 +298,6 @@ class PluginSubmission {
         $artifactPath = ResourceManager::getInstance()->createResource("phar", "application/octet-stream", [], $artifact, 315360000, "poggit.release.artifact", -1);
         copy($this->buildInfo->devBuildRsrPath, $artifactPath);
         $pharUrl = "phar://" . str_replace(DIRECTORY_SEPARATOR, "/", realpath($artifactPath)) . "/";
-//        $py = yaml_parse(file_get_contents($pharUrl . "plugin.yml"));
-//        $py["name"] = $this->name;
-//        $py["version"] = $this->version;
-//        $py["api"] = SubmitFormAjax::rangesToApis($this->spoons);
-//        file_put_contents($pharUrl . "plugin.yml", yaml_emit($py));
 
         $licenses = ["LICENSE", "LICENSE.md", "LICENSE.MD", "LICENSE.txt", "LICENSE.TXT", "license", "license.md", "license.MD", "license.txt", "license.TXT"];
         $licenseFound = false;

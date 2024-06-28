@@ -60,7 +60,6 @@ class NewSubmitAjax extends AjaxModule {
         // Locked values name, version and API load straight from plugin.yml before validating.
         $pharUrl = "phar://" . str_replace(DIRECTORY_SEPARATOR, "/", realpath($submission->buildInfo->devBuildRsrPath));
         $pluginyml = yaml_parse(file_get_contents($pharUrl . "/plugin.yml"));
-        Meta::getLog()->e(var_export($pluginyml, true));
         $submission->name = $pluginyml["name"];
         $submission->version = $pluginyml["version"];
         $submission->spoons = SubmitFormAjax::apisToRanges((array) ($pluginyml["api"] ?? [])); //TODO?
