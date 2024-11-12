@@ -51,15 +51,18 @@ class NewSubmitAjax extends AjaxModule {
         Lang::copyToObject($form, $submission); // do this before other assignments to prevent overriding
         $submission->action = $action;
         Lang::copyToObject($args, $submission);
-        if($submission->mode !== "submit") $submission->name = $submission->refRelease->name;
-        if($submission->mode === "edit") {
-            $submission->version = $submission->refRelease->version;
-            $submission->spoons = $submission->spoons ?: $submission->refRelease->spoons;
-        } else {
+        if($submission->mode !== "edit") {
             $submission->outdated = false;
         }
         if($submission->lastValidVersion === false) $submission->changelog = false;
         if(Meta::getAdmlv() < Meta::ADMLV_REVIEWER) $submission->official = false;
+
+        // Locked values name, version and API load straight from plugin.yml before validating.
+        $pharUrl = "phar://" . str_replace(DIRECTORY_SEPARATOR, "/", realpath($submission->buildInfo->devBuildRsrPath));
+        $pluginyml = yaml_parse(file_get_contents($pharUrl . "/plugin.yml"));
+        $submission->name = $pluginyml["name"];
+        $submission->version = $pluginyml["version"];
+        $submission->spoons = SubmitFormAjax::apisToRanges((array) ($pluginyml["api"] ?? [])); //TODO?
 
         try {
             $submission->validate();

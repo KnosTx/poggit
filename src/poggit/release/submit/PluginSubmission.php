@@ -159,6 +159,10 @@ class PluginSubmission {
 
     private function strictValidate() {
         if($this->mode === SubmitFormAjax::MODE_SUBMIT) {
+            // Compare release name with previous release (if plugins had a different name before it would suddenly change, this forces them to change in plugin.yml)
+            if($this->name !== ($this->refRelease?->name ?? $this->name)) {
+                throw new SubmitException("Name in plugin.yml does not match previous releases name. Please update plugin.yml to match the previous name.");
+            }
             if(!Release::validateName($this->name, $error)) throw new SubmitException($error);
         }
         if(strlen($this->shortDesc) < Config::MIN_SHORT_DESC_LENGTH || strlen($this->shortDesc) > Config::MAX_SHORT_DESC_LENGTH) {
@@ -231,7 +235,7 @@ class PluginSubmission {
                 throw new SubmitException("Unknown requirement type $require->type");
             }
         }
-        $this->spoons = SubmitFormAjax::apisToRanges(SubmitFormAjax::rangesToApis($this->spoons)); // validation and cleaning
+        //$this->spoons = SubmitFormAjax::apisToRanges(SubmitFormAjax::rangesToApis($this->spoons)); // validation and cleaning
         if(count($this->spoons) === 0) throw new SubmitException("Missing supported API versions");
         if($this->license->type !== "custom") {
             $knownLicenses = json_decode(Curl::curlGet("https://spdx.org/licenses/licenses.json", "Accept: application/json"), true);
@@ -294,11 +298,6 @@ class PluginSubmission {
         $artifactPath = ResourceManager::getInstance()->createResource("phar", "application/octet-stream", [], $artifact, 315360000, "poggit.release.artifact", -1);
         copy($this->buildInfo->devBuildRsrPath, $artifactPath);
         $pharUrl = "phar://" . str_replace(DIRECTORY_SEPARATOR, "/", realpath($artifactPath)) . "/";
-        $py = yaml_parse(file_get_contents($pharUrl . "plugin.yml"));
-        $py["name"] = $this->name;
-        $py["version"] = $this->version;
-        $py["api"] = SubmitFormAjax::rangesToApis($this->spoons);
-        file_put_contents($pharUrl . "plugin.yml", yaml_emit($py));
 
         $licenses = ["LICENSE", "LICENSE.md", "LICENSE.MD", "LICENSE.txt", "LICENSE.TXT", "license", "license.md", "license.MD", "license.txt", "license.TXT"];
         $licenseFound = false;

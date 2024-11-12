@@ -357,14 +357,17 @@ class SubmitFormAjax extends AjaxModule {
         $fields = [];
         $fields["name"] = [
             "remarks" => <<<EOD
-The name of the plugin. This will replace the <code>name</code> attribute in plugin.yml in the release phar, and will be
+The name of the plugin. This is readonly and comes from the <code>name</code> attribute in plugin.yml, and will be
 used in the URL and display name of this release. Therefore, this must not duplicate any other existing plugins.<br/>
-The plugin name must not be changed <em>under any circumstances</em> after the initial release
+The plugin name must not be changed <em>under any circumstances</em> after the initial release.
 EOD
             ,
             "refDefault" => $this->refRelease->name,
             "srcDefault" => $this->pluginYml["name"] ?? null
         ];
+        if($fields["name"]["refDefault"] !== null and $fields["name"]["srcDefault"] !== $fields["name"]["refDefault"]){
+            $this->exitBadRequest("Plugin name does not match between plugin.yml and previous release names. Please update your plugin.yml name to match previous release names.");
+        }
         $fields["shortDesc"] = [
             "remarks" => <<<EOD
 A brief one-line description of your plugin. One or two <em>simple</em> and <em>attractive</em> sentences describing your
@@ -380,8 +383,9 @@ The version of this release. The version <em>must be named according to <a targe
 i.e. the version must consist of two or three numbers, optionally with prerelease information behind a hyphen, e.g.
 <code>1.0</code>, <code>2.0.1</code>, <code>3.0.0-beta</code>, <code>4.7.0-beta.3</code>. Note that adding build
 metadata behind a <code>+</code> in the version is disallowed due to URL encoding inconvenience.<br/>
-This version will replace the <code>version</code> attribute in plugin.yml in the release phar, so this doesn't have to
-be same as that in plugin.yml.
+This version is READONLY from the <code>version</code> attribute in plugin.yml, so this cannot be changed here but in your <code>plugin.yml</code> file.
+
+Additionally, no API versions are allowed in this field (eg -PM5 suffix).
 EOD
             ,
             "refDefault" => $this->refRelease->version,
@@ -554,14 +558,18 @@ EOD
         $fields["spoons"] = [
             "remarks" => <<<EOD
 The PocketMine API versions<a href="{$root}gh.pmmp" target="_blank"><img class='gh-logo' src='{$root}res/ghMark.png' width='12'/></a>
-supported by this plugin. This will replace the plugin.yml <code>api</code> attribute. You cannot edit this unless you
-submit a new build.<br/>
+supported by this plugin. This is read from the plugin.yml <code>api</code> attribute. You cannot edit this unless you
+change the values in your <code>plugin.yml</code>.<br/>
 If you include an API version on which your plugin does not work, this plugin will be rejected.
 EOD
             ,
-            "refDefault" => $this->refRelease->spoons,
+            "refDefault" => null,
             "srcDefault" => self::apisToRanges((array) ($this->pluginYml["api"] ?? [])),
         ];
+
+        if(count($fields["spoons"]["srcDefault"]) === 0) {
+            $this->exitBadRequest("No valid API range found in plugin.yml, please verify the 'api' field is correct.");
+        }
 
         $detectedDeps = [];
         foreach((array) ($this->pluginYml["depend"] ?? []) as $name) {
