@@ -15,42 +15,72 @@
  */
 
 /*** GLOBAL */
+:root {
+    --primary-color: #0275d8;
+    --secondary-color: #5cb3fd;
+    --background-color: #f2f2f2;
+    --text-color: #333;
+    --header-color: #fff;
+    --footer-color: #aaa;
+}
 html {
     font-family: "Helvetica Neue", Helvetica, sans-serif;
+    scroll-behavior: smooth;
 }
 body {
-    margin:      0;
-    background:  #F2F2F2;
+    margin: 0;
+    background: var(--background-color);
     padding-top: 50px;
+    color: var(--text-color);
 }
 #header {
-    color: white;
+    color: var(--header-color);
+    background: var(--primary-color);
+    padding: 10px 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 .gitbutton {
-    display:     flex;
-    flex:        0 0 auto;
+    display: flex;
     margin-left: auto;
+    padding: 10px;
+    transition: background 0.3s ease;
+}
+.login-buttons {
+    color: var(--primary-color);
+    transition: color 0.3s ease;
 }
 .login-buttons:hover {
-    color: #5CB3FD;
+    color: var(--secondary-color);
 }
 #footer {
-    width:       50%;
-    margin:      0 auto;
-    color:       #AAAAAA;
-    padding-top: 20px;
+    width: 50%;
+    margin: 0 auto;
+    color: var(--footer-color);
+    padding: 20px;
+    text-align: center;
+    font-size: 14px;
+    border-top: 1px solid #ddd;
 }
 /* body part of the page */
 #body {
-    margin:  5px;
-    padding: 0px 10px 0px 10px;
+    margin: 5px;
+    padding: 10px;
+    background: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
 }
+
 th, td {
-    padding: 5px;
+    padding: 10px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
 }
 a {
-    color: #0275D8;
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: color 0.3s ease;
 }
+
 a .navlink {
     color: #FFFFFF;
 }
@@ -61,10 +91,17 @@ a:visited {
     color: #0275D8;
 }
 .download-release a, .bottom-download-link a, .editRelease a, .plugin-info .info-table a {
-    color: #FFFFFF;
+    display: inline-block;
+    padding: 10px 20px;
+    margin: 10px 0;
+    background: var(--primary-color);
+    color: var(--header-color);
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background 0.3s ease;
 }
 .download-release a:visited, .bottom-download-link a:visited, .editRelease a:visited, .plugin-info .info-table a:visited, .repobuild-dl a:visited {
-    color: #FFFFFF;
+    background: var(--secondary-color);;
 }
 input[type="submit"] {
     border:  none;
@@ -2691,5 +2728,10 @@ a:focus, a:hover {
     }
     #remindTos {
         margin: 50px 10px 0px 10px;
+    }
+}
+@media (max-width: 768px) {
+    #footer {
+        width: 100%;
     }
 }
