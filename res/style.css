@@ -35,7 +35,6 @@ body {
 }
 #header {
     color: var(--header-color);
-    background: var(--primary-color);
     padding: 10px 20px;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
@@ -75,7 +74,6 @@ th, td {
     border-bottom: 1px solid #ddd;
 }
 a {
-    color: var(--primary-color);
     text-decoration: none;
     transition: color 0.3s ease;
 }
