@@ -24,6 +24,7 @@ use poggit\Meta;
 use poggit\module\Module;
 use poggit\release\Release;
 use poggit\utils\internet\Mysql;
+use poggit\utils\OutputManager;
 use function array_filter;
 use function array_flip;
 use function array_map;
@@ -41,6 +42,7 @@ use const JSON_UNESCAPED_SLASHES;
 
 class ReleaseListJsonModule extends Module {
     public function output() {
+        OutputManager::terminateAll();
         $where = "WHERE state >= " . max(3, (int) ($_REQUEST["min-state"] ?? 4));
         $types = "";
         $args = [];
