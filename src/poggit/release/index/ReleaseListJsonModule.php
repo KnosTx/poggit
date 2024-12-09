@@ -185,10 +185,18 @@ class ReleaseListJsonModule extends Module {
             }
         }
 
-        $isMin = substr(Meta::getModuleName(), -9) === ".min.json";
+        $isMin = str_ends_with(Meta::getModuleName(), ".min.json");
         header("Content-Type: application/json");
         header("Access-Control-Allow-Origin: *");
         header("X-Object-Count: " . count($output));
+
+        if(str_ends_with(Meta::getModuleName(), ".jsonl")) {
+            foreach($output as $object) {
+                echo json_encode($object, JSON_UNESCAPED_SLASHES) . "\n";
+            }
+            return;
+        }
+
         echo "[\n";
         foreach($output as $i => $object) {
             if($i > 0) echo "\n,\n";
