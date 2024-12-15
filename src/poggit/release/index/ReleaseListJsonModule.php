@@ -24,6 +24,7 @@ use poggit\Meta;
 use poggit\module\Module;
 use poggit\release\Release;
 use poggit\utils\internet\Mysql;
+use poggit\utils\OutputManager;
 use function array_filter;
 use function array_flip;
 use function array_map;
@@ -41,6 +42,7 @@ use const JSON_UNESCAPED_SLASHES;
 
 class ReleaseListJsonModule extends Module {
     public function output() {
+        OutputManager::terminateAll();
         $where = "WHERE state >= " . max(3, (int) ($_REQUEST["min-state"] ?? 4));
         $types = "";
         $args = [];
@@ -185,10 +187,18 @@ class ReleaseListJsonModule extends Module {
             }
         }
 
-        $isMin = substr(Meta::getModuleName(), -9) === ".min.json";
+        $isMin = str_ends_with(Meta::getModuleName(), ".min.json");
         header("Content-Type: application/json");
         header("Access-Control-Allow-Origin: *");
         header("X-Object-Count: " . count($output));
+
+        if(str_ends_with(Meta::getModuleName(), ".jsonl")) {
+            foreach($output as $object) {
+                echo json_encode($object, JSON_UNESCAPED_SLASHES) . "\n";
+            }
+            return;
+        }
+
         echo "[\n";
         foreach($output as $i => $object) {
             if($i > 0) echo "\n,\n";
